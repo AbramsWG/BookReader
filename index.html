@@ -61,6 +61,8 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
         }
         .highlight-box {
             position: absolute;
@@ -131,6 +133,7 @@
     let currentImageUrl = null;
     let scaleX = 1;
     let scaleY = 1;
+    let lastWords = [];  // 缓存 OCR 识别结果
 
     // 更新语速显示
     speechRate.addEventListener('input', () => {
@@ -139,14 +142,12 @@
 
     // 语音列表
     function populateVoiceList() {
-        
         const keywords = ['jenny','microsoft ana','sonia','samantha'];
 
         const voices = speechSynthesis.getVoices().filter(v => 
             v.lang.startsWith('en') && keywords.some(keyword => v.name.toLowerCase().includes(keyword))
         );
         
-        //const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
         voiceSelect.innerHTML = '';
         voices.forEach(v => {
             const opt = document.createElement('option');
@@ -180,6 +181,8 @@
         const imgHeight = uploadedImage.clientHeight;
         const naturalWidth = uploadedImage.naturalWidth;
         const naturalHeight = uploadedImage.naturalHeight;
+
+        if (naturalWidth === 0 || naturalHeight === 0) return;
 
         scaleX = imgWidth / naturalWidth;
         scaleY = imgHeight / naturalHeight;
@@ -218,7 +221,8 @@
         const { data } = await worker.recognize(url);
         await worker.terminate();
 
-        drawHighlights(data.words);
+        lastWords = data.words;
+        drawHighlights(lastWords);
     }
 
     // 上传图片
@@ -231,9 +235,15 @@
         uploadedImage.style.display = 'block';
 
         uploadedImage.onload = () => {
-            container.style.width = 'auto';
+            // 固定容器尺寸，避免滚动时布局跳变
+            container.style.width = uploadedImage.clientWidth + 'px';
+            container.style.height = uploadedImage.clientHeight + 'px';
+
             performOCR(currentImageUrl);
             rescanBtn.style.display = 'inline-block';
+
+            // 开始观察图片尺寸变化（滚动、缩放、旋转屏幕都会触发）
+            resizeObserver.observe(uploadedImage);
         };
     });
 
@@ -242,20 +252,17 @@
         if (currentImageUrl) performOCR(currentImageUrl);
     });
 
-    // 窗口大小变化时重新调整高亮框（重要！）
-    window.addEventListener('resize', () => {
-        if (uploadedImage.src && uploadedImage.complete) {
-            // 重新计算一次比例并重绘
-            drawHighlights(/* 这里其实应该缓存 words，但为了简单就每次重跑OCR */);
-            // 更优解是把 data.words 存全局变量，此处仅作演示
-            // 生产环境建议：let lastOCRResult; 然后在此处用 lastOCRResult.words
+    // 使用 ResizeObserver 监听图片尺寸变化，修复 Safari 滚动时高亮消失的问题
+    const resizeObserver = new ResizeObserver(entries => {
+        if (lastWords.length > 0 && uploadedImage.src && uploadedImage.complete) {
+            drawHighlights(lastWords);
         }
+    });
+
+    // 清理（可选）
+    window.addEventListener('beforeunload', () => {
+        resizeObserver.disconnect();
     });
 </script>
 </body>
-
 </html>
-
-
-
-
