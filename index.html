@@ -140,13 +140,13 @@
     // 语音列表
     function populateVoiceList() {
         
-        //const keywords = ['jenny','microsoft ana','sonia'];
+        const keywords = ['jenny','microsoft ana','sonia','samantha'];
 
-        //const voices = speechSynthesis.getVoices().filter(v => 
-        //    v.lang.startsWith('en') && keywords.some(keyword => v.name.toLowerCase().includes(keyword))
-        //);
+        const voices = speechSynthesis.getVoices().filter(v => 
+            v.lang.startsWith('en') && keywords.some(keyword => v.name.toLowerCase().includes(keyword))
+        );
         
-        const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+        //const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
         voiceSelect.innerHTML = '';
         voices.forEach(v => {
             const opt = document.createElement('option');
@@ -255,6 +255,7 @@
 </body>
 
 </html>
+
 
 
 
