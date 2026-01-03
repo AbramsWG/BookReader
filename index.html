@@ -139,10 +139,11 @@
 
     // 语音列表
     function populateVoiceList() {
-        const keywords = ['Jenny'];
+        
+        const keywords = ['jenny','microsoft ana','sonia'];
 
         const voices = speechSynthesis.getVoices().filter(v => 
-            v.lang.startsWith('en-US') && keywords.some(keyword => v.name.toLowerCase().includes(keyword))
+            v.lang.startsWith('en') && keywords.some(keyword => v.name.toLowerCase().includes(keyword))
         );
         
         //const voices = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
@@ -254,4 +255,5 @@
 </body>
 
 </html>
+
 
